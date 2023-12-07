@@ -1,0 +1,582 @@
+// Importacion de los paquetes necesarios para el proyecto.
+const mysql = require('mysql2');
+const express = require('express');
+var app = express();
+const bodyparser = require('body-parser');
+
+// Se utiliza para enviar los datos JSON a la API de Node.
+
+app.use(bodyparser.json());
+
+// Cadena de conexion a la base de datos.
+
+var mysqlConnection = mysql.createConnection({
+
+    host: 'localhost',
+    user: '1600-E3',
+    password: '1600-E3#56c',
+    database: '1600-E3',
+    multipleStatements: true
+});
+
+// Comprobacion de si la conexion se realizo correctamente al ejecutar el proyecto en la consola.
+
+mysqlConnection.connect((err)=>{
+    if (!err){
+        console.log("Db Conexion exitosa");
+    }else{
+        console.log("Db conexion fallida \n Error :"+ JSON.stringify(err, undefined, 2));
+    }
+});
+
+// Ejecucion del servidor en el puerto especificado
+
+app.listen(3000, () => console.log('El servidor Express se esta ejecutando en el puerto: 3000'));
+
+
+//--------------------------------------------------------CESAR--------------------------------------------------------
+// Ruta para SELECT de Personas
+app.get('/personas', (req, res) => {
+    connection.query('CALL P_SelectPersonas()', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json(results[0]);
+      }
+    });
+  });
+  
+  // Ruta para INSERT de Personas
+  app.post('/personas', (req, res) => {
+    const { Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, DNI, Fec_Nacimiento, IdGenero } = req.body;
+  
+    connection.query(
+      'CALL P_InsertarPersona(?, ?, ?, ?, ?, ?, ?)',
+      [Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, DNI, Fec_Nacimiento, IdGenero],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro insertado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para UPDATE de Personas
+  app.put('/personas/:id', (req, res) => {
+    const { id } = req.params;
+    const { Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, DNI, Fec_Nacimiento, IdGenero } = req.body;
+  
+    connection.query(
+      'CALL P_ActualizarPersona(?, ?, ?, ?, ?, ?, ?)',
+      [id, Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, DNI, Fec_Nacimiento, IdGenero],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro actualizado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para DELETE de Personas
+  app.delete('/personas/:id', (req, res) => {
+    const { id } = req.params;
+  
+    connection.query('CALL P_EliminarPersona(?)', [id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+      }
+    });
+  });
+
+  // Ruta para Insertar un Telefono
+app.post('/telefonos', async (req, res) => {
+    const { Cod_persona, Num_Telefono, Tip_Telefono, Cod_Telefono } = req.body;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_InsertarTelefono(?, ?, ?, ?, ?, ?)', ['I', Cod_persona, Num_Telefono, Tip_Telefono, Cod_Telefono, 0]);
+        res.status(201).json({ message: 'Telefono insertado correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al insertar el telefono' });
+    }
+});
+
+// Ruta para Eliminar un Telefono
+app.delete('/telefonos/:Cod_Telefono', async (req, res) => {
+    const { Cod_Telefono } = req.params;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_EliminarTelefono(?, ?)', ['B', Cod_Telefono]);
+        res.status(200).json({ message: 'Telefono eliminado correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al eliminar el telefono' });
+    }
+});
+
+// Ruta para Actualizar un Telefono
+app.put('/telefonos/:Cod_Telefono', async (req, res) => {
+    const { Cod_Telefono } = req.params;
+    const { Cod_persona, Num_Telefono, Tip_Telefono } = req.body;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_ActualizarTelefono(?, ?, ?, ?, ?, ?)', ['A', Cod_persona, Num_Telefono, Tip_Telefono, Cod_Telefono, 0]);
+        res.status(200).json({ message: 'Telefono actualizado correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al actualizar el telefono' });
+    }
+});
+
+// Ruta para Obtener Todos los Telefonos
+app.get('/telefonos', async (req, res) => {
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_ObtenerTelefonos(?, ?, ?, ?, ?, ?, ?)', ['M', 0, '', '', '', '', '']);
+        res.status(200).json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al obtener los telefonos' });
+    }
+});
+// Ruta para Insertar una Direccion
+app.post('/direcciones', async (req, res) => {
+  const { Cod_Direccion, Des_Direccion, Cod_persona } = req.body;
+
+  try {
+      const [rows] = await mysqlConnection.execute('CALL P_InsertarDireccion(?, ?, ?, ?, ?, ?)', ['I', Cod_Direccion, Des_Direccion, Cod_persona, '', '', 0]);
+      res.status(201).json({ message: 'Direccion insertada correctamente' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al insertar la direccion' });
+  }
+});
+
+// Ruta para Eliminar una Direccion
+app.delete('/direcciones/:Cod_Direccion', async (req, res) => {
+  const { Cod_Direccion } = req.params;
+
+  try {
+      const [rows] = await mysqlConnection.execute('CALL P_EliminarDireccion(?, ?)', ['B', Cod_Direccion]);
+      res.status(200).json({ message: 'Direccion eliminada correctamente' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al eliminar la direccion' });
+  }
+});
+
+// Ruta para Actualizar una Direccion
+app.put('/direcciones/:Cod_Direccion', async (req, res) => {
+  const { Cod_Direccion } = req.params;
+  const { Des_Direccion, Cod_persona } = req.body;
+
+  try {
+      const [rows] = await mysqlConnection.execute('CALL P_ActualizarDireccion(?, ?, ?, ?, ?, ?)', ['A', Cod_Direccion, Des_Direccion, Cod_persona, '', '', 0]);
+      res.status(200).json({ message: 'Direccion actualizada correctamente' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al actualizar la direccion' });
+  }
+});
+
+// Ruta para Obtener Todas las Direcciones
+app.get('/direcciones', async (req, res) => {
+  try {
+      const [rows] = await mysqlConnection.execute('CALL P_ObtenerDireccion(?, ?, ?, ?, ?, ?, ?)', ['M', 0, '', '', '', '', '']);
+      res.status(200).json(rows);
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error al obtener las direcciones' });
+  }
+});
+//--------------------------------------------------------SAUL--------------------------------------------------------
+// Ruta para SELECT de expositores
+app.get('/expositores', (req, res) => {
+  connection.query('CALL P_SelectExpositores()', (error, results, fields) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    } else {
+      res.status(200).json(results[0]);
+    }
+  });
+});
+
+// Ruta para INSERT de expositor
+app.post('/expositores', (req, res) => {
+  const { Nom_Expositor, Email, Telefono, Asignacion } = req.body;
+
+  connection.query(
+    'CALL P_InsertarExpositor(?, ?, ?, ?)',
+    [Nom_Expositor, Email, Telefono, Asignacion],
+    (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Expositor insertado correctamente' });
+      }
+    }
+  );
+});
+
+// Ruta para UPDATE de expositor
+app.put('/expositores/:id', (req, res) => {
+  const { id } = req.params;
+  const { Nom_Expositor, Email, Telefono, Asignacion } = req.body;
+
+  connection.query(
+    'CALL P_ActualizarExpositor(?, ?, ?, ?, ?)',
+    [id, Nom_Expositor, Email, Telefono, Asignacion],
+    (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Expositor actualizado correctamente' });
+      }
+    }
+  );
+});
+
+// Ruta para DELETE de expositor
+app.delete('/expositores/:id', (req, res) => {
+  const { id } = req.params;
+
+  connection.query('CALL P_EliminarExpositor(?)', [id], (error, results, fields) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    } else {
+      res.status(200).json({ message: 'Expositor eliminado correctamente' });
+    }
+  });
+});
+
+// Ruta para SELECT de SeguimientoAgenda
+app.get('/seguimientoAgenda', (req, res) => {
+    connection.query('CALL P_SelectSeguimientoAgenda()', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json(results[0]);
+      }
+    });
+  });
+  
+  // Ruta para INSERT de SeguimientoAgenda
+  app.post('/seguimientoAgenda', (req, res) => {
+    const { Nom_Campaña, Fec_Inicio, Fec_Fin, Estado, Obj_Alcanzado } = req.body;
+  
+    connection.query(
+      'CALL P_InsertarSeguimientoAgenda(?, ?, ?, ?, ?)',
+      [Nom_Campaña, Fec_Inicio, Fec_Fin, Estado, Obj_Alcanzado],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro insertado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para UPDATE de SeguimientoAgenda
+  app.put('/seguimientoAgenda/:id', (req, res) => {
+    const { id } = req.params;
+    const { Nom_Campaña, Fec_Inicio, Fec_Fin, Estado, Obj_Alcanzado } = req.body;
+  
+    connection.query(
+      'CALL P_ActualizarSeguimientoAgenda(?, ?, ?, ?, ?, ?)',
+      [id, Nom_Campaña, Fec_Inicio, Fec_Fin, Estado, Obj_Alcanzado],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro actualizado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para DELETE de SeguimientoAgenda
+  app.delete('/seguimientoAgenda/:id', (req, res) => {
+    const { id } = req.params;
+  
+    connection.query('CALL P_EliminarSeguimientoAgenda(?)', [id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+      }
+    });
+  });
+  //--------------------------------------------------------JOSE--------------------------------------------------------
+  // Ruta para SELECT de Conferencistas
+app.get('/conferencistas', (req, res) => {
+    connection.query('CALL P_SelectConferencistas()', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json(results[0]);
+      }
+    });
+  });
+  
+  // Ruta para INSERT de Conferencistas
+  app.post('/conferencistas', (req, res) => {
+    const { Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, Nom_Tema, Id_Conferencista, Cod_Persona } = req.body;
+  
+    connection.query(
+      'CALL P_InsertarConferencista(?, ?, ?, ?, ?, ?, ?)',
+      [Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, Nom_Tema, Id_Conferencista, Cod_Persona],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro insertado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para UPDATE de Conferencistas
+  app.put('/conferencistas/:id', (req, res) => {
+    const { id } = req.params;
+    const { Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, Nom_Tema, Cod_Persona } = req.body;
+  
+    connection.query(
+      'CALL P_ActualizarConferencista(?, ?, ?, ?, ?, ?)',
+      [id, Pri_Nombre, Seg_Nombre, Pri_Apellido, Seg_Apellido, Nom_Tema, Cod_Persona],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro actualizado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para DELETE de Conferencistas
+  app.delete('/conferencistas/:id', (req, res) => {
+    const { id } = req.params;
+  
+    connection.query('CALL P_EliminarConferencista(?)', [id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+      }
+    });
+  });
+
+// Ruta para SELECT de Eventos
+app.get('/eventos', (req, res) => {
+    connection.query('CALL P_SelectEventos()', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json(results[0]);
+      }
+    });
+  });
+  
+  // Ruta para INSERT de Eventos
+  app.post('/eventos', (req, res) => {
+    const { Nom_Campaña, Nom_Encargado, Nom_Tema, Fec_Evento, Hr_Evento, Telefono, Correo, Cod_Campaña, Cod_Persona } = req.body;
+  
+    connection.query(
+      'CALL P_InsertarEvento(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [Nom_Campaña, Nom_Encargado, Nom_Tema, Fec_Evento, Hr_Evento, Telefono, Correo, Cod_Campaña, Cod_Persona],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro insertado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para UPDATE de Eventos
+  app.put('/eventos/:id', (req, res) => {
+    const { id } = req.params;
+    const { Nom_Campaña, Nom_Encargado, Nom_Tema, Fec_Evento, Hr_Evento, Telefono, Correo, Cod_Campaña, Cod_Persona } = req.body;
+  
+    connection.query(
+      'CALL P_ActualizarEvento(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, Nom_Campaña, Nom_Encargado, Nom_Tema, Fec_Evento, Hr_Evento, Telefono, Correo, Cod_Campaña, Cod_Persona],
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ error: 'Error interno del servidor' });
+        } else {
+          res.status(200).json({ message: 'Registro actualizado correctamente' });
+        }
+      }
+    );
+  });
+  
+  // Ruta para DELETE de Eventos
+  app.delete('/eventos/:id', (req, res) => {
+    const { id } = req.params;
+  
+    connection.query('CALL P_EliminarEvento(?)', [id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      } else {
+        res.status(200).json({ message: 'Registro eliminado correctamente' });
+      }
+    });
+  });
+  
+  //--------------------------------------------------------CRISTIAN--------------------------------------------------------
+  // Funcion para ejecutar el procedimiento almacenado de insercion de equipos
+  function insertarEquipos() {
+    connection.query('CALL P_Insertar_equipos(?,?,?)', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Procedimiento de insercion de equipos ejecutado con exito');
+      }
+    });
+  }
+  
+  // Funcion para ejecutar el procedimiento almacenado de insercion de inventario de activos
+  function insertarInventarioActivos() {
+    connection.query('CALL P_Insertar_inventario_activos(?,?,?)', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Procedimiento de insercion de inventario de activos ejecutado con exito');
+      }
+    });
+  }
+  
+  // Funcion para ejecutar el procedimiento almacenado de insercion de materiales
+  function insertarMateriales() {
+    connection.query('CALL P_Insertar_materiales(?, ?, ?)', (error, results, fields) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Procedimiento de insercion de materiales ejecutado con exito');
+      }
+    });
+  }
+  
+  // Funcion para ejecutar el procedimiento almacenado de actualizacion de equipos
+  function actualizarEquipos(contenido) {
+    connection.query('CALL Actualizarequipos(?, ?, ?)', [contenido, contenido, contenido], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+      } else {
+        console.log('Procedimiento de actualizacion de equipos ejecutado con exito');
+        // Cerrar la conexion a la base de datos al finalizar
+        connection.end();
+      }
+    });
+  }
+
+  //--------------------------------------------------------KATERINE--------------------------------------------------------
+  // insertar alerta de de Seguimiento
+
+app.post('/TL_Alerta_Seguimiento', (req, res) => {
+    const { Id_Alerta, Nom_Alerta, Desc_Alerta, Fec_Ejecucion_Alerta } = req.body;
+    const sql = 'CALL INSAlerta_Seguimiento(?, ?, ?)';
+    mysqlConnection.query(sql, [Id_Alerta, Nom_Alerta, Desc_Alerta, Fec_Ejecucion_Alerta ], (err, result) => {
+        if (!err) {
+            res.send('Registro insertado correctamente');
+        } else {
+            console.log(err);
+        }
+    });
+});
+
+// Actualizar un registro en Alerta de Seguimiento
+app.put('/Alerta_Seguimiento', (req, res) => {
+    const { Id_Alerta, Nom_Alerta, Desc_Alerta, Fec_Ejecucion_Alerta } = req.body;
+    const sql = 'CALL UPDAlerta_Seguiniento(?, ?, ?)';
+    mysqlConnection.query(sql, [Id_Alerta, Nom_Alerta, Desc_Alerta, Fec_Ejecucion_Alerta], (err, result) => {
+        if (!err) {
+            res.send('Registro actualizado correctamente');
+        } else {
+            console.log(err);
+        }
+    });
+});
+
+// Seleccionar todos los registros en Alerta de Seguimiento
+app.get('/Alerta_Seguimiento', (req, res) => {
+    const sql = 'CALL Alerta_Seguimiento()';
+    mysqlConnection.query(sql, (err, rows) => {
+        if (!err) {
+            res.status(200).json(rows[0]);
+        } else {
+            console.log(err);
+        }
+    });
+});
+
+//--------------------------------------------------------EDUARDO--------------------------------------------------------
+//INSERTAR INFORME
+
+app.post('/insertarInforme', async (req, res) => {
+    const { V_AutorID, V_InformeNombre, V_InformeDescripcion, V_InformeFrecuencia } = req.body;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_InsertarInforme(?, ?, ?, ?)', [V_AutorID, V_InformeNombre, V_InformeDescripcion, V_InformeFrecuencia]);
+        res.status(200).json({ message: 'Informe insertado correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al insertar el informe' });
+    }
+});
+
+//ACTUALIZAR ID DEL AUTOR EN UN INFORME
+
+app.put('/actualizarIDdelAutorEnInforme', async (req, res) => {
+    const { V_InformeID, V_NuevoAutorID } = req.body;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_ActualizarIDdelAutorEnInforme(?, ?)', [V_InformeID, V_NuevoAutorID]);
+        res.status(200).json({ message: 'ID del autor en el informe actualizado correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al actualizar el ID del autor en el informe' });
+    }
+});
+
+//ELIMINAR USUARIO Y SUS INFORMES
+
+app.delete('/eliminarUsuarioYInformes', async (req, res) => {
+    const { V_UsuarioID } = req.body;
+
+    try {
+        const [rows] = await mysqlConnection.execute('CALL P_EliminarUsuarioYInformes(?)', [V_UsuarioID]);
+        res.status(200).json({ message: 'Usuario y sus informes eliminados correctamente' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al eliminar el usuario y sus informes' });
+    }
+});
