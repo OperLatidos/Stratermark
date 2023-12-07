@@ -7,7 +7,7 @@
  * @package Conexion
  */
 
-const DB_HOST = 'localhost'; // Dirección del servidor de la base de datos
+const DB_HOST = '127.0.0.1'; // Dirección del servidor de la base de datos
 const DB_NAME = 'eventos'; // Nombre de la base de datos
 const DB_PORT = '3306'; // Puerto de la base de datos
 const DB_USER = 'root'; // Usuario de la base de datos
